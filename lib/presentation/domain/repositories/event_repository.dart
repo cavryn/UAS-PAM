@@ -1,4 +1,4 @@
-import '../event.dart';
+import '../../domain/entities/event.dart';
 
 abstract class EventRepository {
   Stream<List<Event>> getEvents();

@@ -11,4 +11,19 @@ class FirestoreDatasource {
           .toList(),
     );
   }
+
+  Future<void> addEvent({
+    required String name,
+    required String description,
+    required String date,
+  }) async {
+    final event = EventModel(
+      id: '',
+      name: name,
+      description: description,
+      date: date,
+    );
+
+    await _firestore.collection('events').add(event.toFirestore());
+  }
 }

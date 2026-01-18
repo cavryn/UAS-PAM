@@ -7,9 +7,11 @@ import 'firebase_options.dart';
 import 'presentation/pages/home_page.dart';
 import 'presentation/pages/event_detail_page.dart';
 import 'providers/event_provider.dart';
+import 'presentation/domain/usecases/add_events_usecase.dart';
 import 'presentation/domain/usecases/get_events_usecase.dart';
 import 'presentation/data/datasources/firestore_datasource.dart';
 import 'presentation/data/repositories/event_repository_impl.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -44,11 +46,15 @@ class MyApp extends StatelessWidget {
     final firestoreDatasource = FirestoreDatasource();
     final eventRepository = EventRepositoryImpl(firestoreDatasource);
     final getEventsUsecase = GetEventsUsecase(eventRepository);
+    final addEventUsecase = AddEventUsecase(eventRepository);
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => EventProvider(getEventsUsecase),
+          create: (_) => EventProvider(
+            getEventsUsecase,
+            addEventUsecase,
+          ),
         ),
       ],
       child: MaterialApp.router(

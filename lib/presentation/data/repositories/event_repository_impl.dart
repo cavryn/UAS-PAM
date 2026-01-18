@@ -11,4 +11,17 @@ class EventRepositoryImpl implements EventRepository {
   Stream<List<Event>> getEvents() {
     return datasource.getEvents();
   }
+
+  @override
+  Future<void> addEvent({
+    required String name,
+    required String description,
+    required String date,
+  }) async {
+    await datasource.addEvent(
+      name: name,
+      description: description,
+      date: date,
+    );
+  }
 }

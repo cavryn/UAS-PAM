@@ -9,6 +9,7 @@ import 'presentation/pages/event_detail_page.dart';
 import 'providers/event_provider.dart';
 import 'presentation/domain/usecases/add_events_usecase.dart';
 import 'presentation/domain/usecases/get_events_usecase.dart';
+import 'presentation/domain/usecases/check_duplicate_event_usecase.dart'; // TAMBAHAN BARU
 import 'presentation/data/datasources/firestore_datasource.dart';
 import 'presentation/data/repositories/event_repository_impl.dart';
 
@@ -43,10 +44,12 @@ class MyApp extends StatelessWidget {
       ],
     );
 
+    // Inisialisasi semua dependencies
     final firestoreDatasource = FirestoreDatasource();
     final eventRepository = EventRepositoryImpl(firestoreDatasource);
     final getEventsUsecase = GetEventsUsecase(eventRepository);
     final addEventUsecase = AddEventUsecase(eventRepository);
+    final checkDuplicateEventUsecase = CheckDuplicateEventUsecase(eventRepository); // TAMBAHAN BARU
 
     return MultiProvider(
       providers: [
@@ -54,6 +57,7 @@ class MyApp extends StatelessWidget {
           create: (_) => EventProvider(
             getEventsUsecase,
             addEventUsecase,
+            checkDuplicateEventUsecase, // TAMBAHAN BARU
           ),
         ),
       ],

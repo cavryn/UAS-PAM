@@ -147,21 +147,60 @@ class HomePage extends StatelessWidget {
                 final provider = context.read<EventProvider>();
                 
                 try {
+                  // CEK DUPLIKASI DULU
+                  final isDuplicate = await provider.checkDuplicateEvent(
+                    name: nameController.text,
+                    date: dateController.text,
+                  );
+                  
+                  if (isDuplicate) {
+                    // Jika duplikat, tampilkan peringatan DAN JANGAN TUTUP DIALOG
+                    if (dialogContext.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Event dengan nama dan tanggal yang sama sudah ada!'),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                    return; // PENTING: return agar dialog tidak tertutup
+                  }
+                  
+                  // Jika tidak duplikat, simpan event
                   await provider.addEvent(
                     name: nameController.text,
                     description: descriptionController.text,
                     date: dateController.text,
                   );
                   
-                  Navigator.pop(dialogContext);
+                  // TUTUP DIALOG - INI YANG PALING PENTING!
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
                   
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Event berhasil ditambahkan!')),
-                  );
+                  // Tampilkan notifikasi berhasil SETELAH dialog tertutup
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Event berhasil ditambahkan!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                  
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
+                  // Jika ada error, tampilkan error tapi JANGAN TUTUP DIALOG
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
                 }
               }
             },

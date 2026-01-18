@@ -8,4 +8,10 @@ abstract class EventRepository {
     required String description,
     required String date,
   });
+
+  // Method baru untuk cek duplikasi
+  Future<bool> checkDuplicateEvent({
+    required String name,
+    required String date,
+  });
 }

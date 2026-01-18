@@ -24,4 +24,15 @@ class EventRepositoryImpl implements EventRepository {
       date: date,
     );
   }
+
+  @override
+  Future<bool> checkDuplicateEvent({
+    required String name,
+    required String date,
+  }) async {
+    return await datasource.checkDuplicateEvent(
+      name: name,
+      date: date,
+    );
+  }
 }

@@ -26,4 +26,17 @@ class FirestoreDatasource {
 
     await _firestore.collection('events').add(event.toFirestore());
   }
+
+  Future<bool> checkDuplicateEvent({
+    required String name,
+    required String date,
+  }) async {
+    final querySnapshot = await _firestore
+        .collection('events')
+        .where('name', isEqualTo: name)
+        .where('date', isEqualTo: date)
+        .get();
+
+    return querySnapshot.docs.isNotEmpty;
+  }
 }

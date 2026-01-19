@@ -8,6 +8,11 @@ class ParticipantRepositoryImpl implements ParticipantRepository {
   ParticipantRepositoryImpl(this.datasource);
 
   @override
+  Stream<List<Participant>> getPendingParticipants() {
+    return datasource.getPendingParticipants();
+  }
+
+  @override
   Stream<List<Participant>> getParticipantsByEvent(String eventId) {
     return datasource.getParticipantsByEvent(eventId);
   }

@@ -3,14 +3,12 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/participant_provider.dart';
 import '../domain/entities/event.dart';
+import 'admin/participant_approval_page.dart';
 
 class EventDetailPage extends StatefulWidget {
   final Event event;
 
-  const EventDetailPage({
-    super.key,
-    required this.event,
-  });
+  const EventDetailPage({super.key, required this.event});
 
   @override
   State<EventDetailPage> createState() => _EventDetailPageState();
@@ -87,9 +85,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            participantProvider.error ?? 'Pendaftaran gagal',
-          ),
+          content: Text(participantProvider.error ?? 'Pendaftaran gagal'),
           backgroundColor: Colors.red,
         ),
       );
@@ -99,9 +95,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Event'),
-      ),
+      appBar: AppBar(title: const Text('Detail Event')),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -111,11 +105,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
               height: 200,
               color: Colors.indigo.shade100,
               child: const Center(
-                child: Icon(
-                  Icons.event,
-                  size: 80,
-                  color: Colors.indigo,
-                ),
+                child: Icon(Icons.event, size: 80, color: Colors.indigo),
               ),
             ),
 
@@ -165,18 +155,12 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   // Description
                   const Text(
                     'Deskripsi',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     widget.event.description,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
 
                   const SizedBox(height: 100), // Space for button
@@ -211,10 +195,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               Text(
                 value,
@@ -248,11 +229,19 @@ class _EventDetailPageState extends State<EventDetailPage> {
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(
           onPressed: () {
-            // Navigate to participant list page
-            // TODO: Implement navigation
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ParticipantApprovalPage(
+                  eventId: widget.event.id,
+                  eventName: widget.event.name,
+                ),
+              ),
+            );
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
+            backgroundColor: Colors.indigo,
           ),
           child: const Text('Kelola Peserta'),
         ),

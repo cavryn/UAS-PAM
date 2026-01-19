@@ -1,24 +1,41 @@
 import 'package:flutter/foundation.dart';
 import '../presentation/domain/repositories/participant_repository.dart';
+import '../presentation/domain/entities/participant.dart';
 
-class ParticipantProvider extends ChangeNotifier {
+class ParticipantProvider with ChangeNotifier {
   final ParticipantRepository _repository;
-  
-  bool _isLoading = false;
-  String? _error;
 
   ParticipantProvider(this._repository);
+
+  // State management
+  bool _isLoading = false;
+  String? _error;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Get participants by event ID
-  Stream getParticipantsByEvent(String eventId) {
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void _setError(String? value) {
+    _error = value;
+    notifyListeners();
+  }
+
+  // Get pending participants
+  Stream<List<Participant>> getPendingParticipants() {
+    return _repository.getPendingParticipants();
+  }
+
+  // Get participants by event
+  Stream<List<Participant>> getParticipantsByEvent(String eventId) {
     return _repository.getParticipantsByEvent(eventId);
   }
 
-  // Get participants by user ID (my registrations)
-  Stream getParticipantsByUser(String userId) {
+  // Get participants by user
+  Stream<List<Participant>> getParticipantsByUser(String userId) {
     return _repository.getParticipantsByUser(userId);
   }
 
@@ -30,11 +47,10 @@ class ParticipantProvider extends ChangeNotifier {
     required String userEmail,
     String? userPhone,
   }) async {
+    _setLoading(true);
+    _setError(null);
+    
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
       await _repository.registerToEvent(
         eventId: eventId,
         userId: userId,
@@ -42,19 +58,17 @@ class ParticipantProvider extends ChangeNotifier {
         userEmail: userEmail,
         userPhone: userPhone,
       );
-
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      _setError(e.toString());
+      _setLoading(false);
+      print('Error registering to event: $e');
       return false;
     }
   }
 
-  // Check if user already registered
+  // Check if user registered
   Future<bool> isUserRegistered({
     required String eventId,
     required String userId,
@@ -65,90 +79,98 @@ class ParticipantProvider extends ChangeNotifier {
         userId: userId,
       );
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      print('Error checking registration: $e');
       return false;
     }
   }
 
-  // Approve participant (Admin)
+  // Approve participant
   Future<bool> approveParticipant(String participantId) async {
+    _setLoading(true);
+    _setError(null);
+    
     try {
-      _isLoading = true;
-      notifyListeners();
-
       await _repository.approveParticipant(participantId);
-
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      _setError('Gagal menyetujui peserta: ${e.toString()}');
+      _setLoading(false);
+      print('Error approving participant: $e');
       return false;
     }
   }
 
-  // Reject participant (Admin)
+  // Reject participant
   Future<bool> rejectParticipant(String participantId) async {
+    _setLoading(true);
+    _setError(null);
+    
     try {
-      _isLoading = true;
-      notifyListeners();
-
       await _repository.rejectParticipant(participantId);
-
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      _setError('Gagal menolak peserta: ${e.toString()}');
+      _setLoading(false);
+      print('Error rejecting participant: $e');
       return false;
     }
   }
 
   // Check-in participant
   Future<bool> checkInParticipant(String participantId) async {
+    _setLoading(true);
+    _setError(null);
+    
     try {
-      _isLoading = true;
-      notifyListeners();
-
       await _repository.checkInParticipant(participantId);
-
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      _setError('Gagal check-in peserta: ${e.toString()}');
+      _setLoading(false);
+      print('Error checking in participant: $e');
       return false;
     }
   }
 
   // Cancel registration
   Future<bool> cancelRegistration(String participantId) async {
+    _setLoading(true);
+    _setError(null);
+    
     try {
-      _isLoading = true;
-      notifyListeners();
-
       await _repository.cancelRegistration(participantId);
-
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
       return true;
     } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
+      _setError('Gagal membatalkan pendaftaran: ${e.toString()}');
+      _setLoading(false);
+      print('Error canceling registration: $e');
       return false;
     }
   }
 
+  // Get participant by QR Code
+  Future<Participant?> getParticipantByQRCode(String qrCode) async {
+    _setLoading(true);
+    _setError(null);
+    
+    try {
+      final participant = await _repository.getParticipantByQRCode(qrCode);
+      _setLoading(false);
+      return participant;
+    } catch (e) {
+      _setError('Gagal mencari peserta: ${e.toString()}');
+      _setLoading(false);
+      print('Error getting participant by QR: $e');
+      return null;
+    }
+  }
+
+  // Clear error
   void clearError() {
-    _error = null;
-    notifyListeners();
+    _setError(null);
   }
 }

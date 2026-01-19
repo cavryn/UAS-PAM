@@ -1,8 +1,10 @@
-import '../entities/participant.dart';
+import 'package:flutter/material.dart';
+import '../../domain/entities/participant.dart';
 
 abstract class ParticipantRepository {
   Stream<List<Participant>> getParticipantsByEvent(String eventId);
   Stream<List<Participant>> getParticipantsByUser(String userId);
+  Stream<List<Participant>> getPendingParticipants(); // ← Tambahkan ini
   
   Future<void> registerToEvent({
     required String eventId,

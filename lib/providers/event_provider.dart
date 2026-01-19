@@ -16,17 +16,25 @@ class EventProvider extends ChangeNotifier {
 
   Stream get events => _getEventsUsecase();
 
-  Future<void> addEvent({
-    required String name,
-    required String description,
-    required String date,
-  }) async {
-    await _addEventUsecase(
-      name: name,
-      description: description,
-      date: date,
-    );
-  }
+Future<void> addEvent({
+  required String name,
+  required String description,
+  required String date,
+  required String location,
+  required int quota,
+  required String createdBy,
+  required String status,
+}) async {
+  await _addEventUsecase(
+    name: name,
+    description: description,
+    date: date,
+    location: location,
+    quota: quota,
+    createdBy: createdBy,
+    status: status,
+  );
+}
 
   Future<bool> checkDuplicateEvent({
     required String name,
@@ -37,4 +45,4 @@ class EventProvider extends ChangeNotifier {
       date: date,
     );
   }
-}
+}      

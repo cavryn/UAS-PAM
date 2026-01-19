@@ -12,18 +12,26 @@ class EventRepositoryImpl implements EventRepository {
     return datasource.getEvents();
   }
 
-  @override
-  Future<void> addEvent({
-    required String name,
-    required String description,
-    required String date,
-  }) async {
-    await datasource.addEvent(
-      name: name,
-      description: description,
-      date: date,
-    );
-  }
+@override
+Future<void> addEvent({
+  required String name,
+  required String description,
+  required String date,
+  required String location,
+  required int quota,
+  required String createdBy,
+  required String status,
+}) async {
+  await datasource.addEvent(
+    name: name,
+    description: description,
+    date: date,
+    location: location,
+    quota: quota,
+    createdBy: createdBy,
+    status: status,
+  );
+}
 
   @override
   Future<bool> checkDuplicateEvent({

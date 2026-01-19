@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/providers/event_provider.dart';
+import '/providers/auth_provider.dart';
 import '../domain/entities/event.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,10 +11,20 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<EventProvider>();
+    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Smart Event'),
+        actions: [
+          // Profile/Logout button
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              _showProfileMenu(context);
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<List<Event>>(
         stream: provider.events as Stream<List<Event>>,
@@ -32,27 +43,180 @@ class HomePage extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             itemCount: events.length,
             itemBuilder: (context, index) {
+              final event = events[index];
               return Card(
-                child: ListTile(
-                  title: Text(events[index].name),
-                  subtitle: Text(events[index].date),
-                  trailing: const Icon(Icons.arrow_forward),
+                margin: const EdgeInsets.only(bottom: 12),
+                child: InkWell(
                   onTap: () {
-                    context.go(
-                      '/detail',
-                      extra: events[index].name,
-                    );
+                    context.go('/detail', extra: event);
                   },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                event.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            _buildStatusChip(event.status),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              event.date,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(width: 16),
+                            const Icon(
+                              Icons.location_on,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                event.location,
+                                style: const TextStyle(color: Colors.grey),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.people,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Kuota: ${event.quota} peserta',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEventDialog(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: authProvider.isAdmin
+          ? FloatingActionButton(
+              onPressed: () => _showAddEventDialog(context),
+              child: const Icon(Icons.add),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildStatusChip(String status) {
+    Color color;
+    String text;
+
+    switch (status) {
+      case 'draft':
+        color = Colors.grey;
+        text = 'Draft';
+        break;
+      case 'published':
+        color = Colors.green;
+        text = 'Dibuka';
+        break;
+      case 'ongoing':
+        color = Colors.orange;
+        text = 'Berlangsung';
+        break;
+      case 'completed':
+        color = Colors.blue;
+        text = 'Selesai';
+        break;
+      default:
+        color = Colors.grey;
+        text = status;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color),
       ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  void _showProfileMenu(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(authProvider.currentUser?.name ?? 'User'),
+                subtitle: Text(authProvider.currentUser?.email ?? ''),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.event_note),
+                title: const Text('Event Saya'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/my-events');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () async {
+                  await authProvider.signOut();
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    context.go('/login');
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -60,6 +224,8 @@ class HomePage extends StatelessWidget {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
     final dateController = TextEditingController();
+    final locationController = TextEditingController();
+    final quotaController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -102,6 +268,39 @@ class HomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: locationController,
+                  decoration: const InputDecoration(
+                    labelText: 'Lokasi',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Lokasi tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: quotaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Kuota Peserta',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Kuota tidak boleh kosong';
+                    }
+                    final quota = int.tryParse(value);
+                    if (quota == null || quota <= 0) {
+                      return 'Kuota harus lebih dari 0';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
                   controller: dateController,
                   decoration: const InputDecoration(
                     labelText: 'Tanggal (YYYY-MM-DD)',
@@ -115,10 +314,8 @@ class HomePage extends StatelessWidget {
                     return null;
                   },
                   onTap: () async {
-                    // Hide keyboard
                     FocusScope.of(dialogContext).requestFocus(FocusNode());
                     
-                    // Show date picker
                     final date = await showDatePicker(
                       context: dialogContext,
                       initialDate: DateTime.now(),
@@ -145,16 +342,15 @@ class HomePage extends StatelessWidget {
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 final provider = context.read<EventProvider>();
+                final authProvider = context.read<AuthProvider>();
                 
                 try {
-                  // CEK DUPLIKASI DULU
                   final isDuplicate = await provider.checkDuplicateEvent(
                     name: nameController.text,
                     date: dateController.text,
                   );
                   
                   if (isDuplicate) {
-                    // Jika duplikat, tampilkan peringatan DAN JANGAN TUTUP DIALOG
                     if (dialogContext.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -164,22 +360,24 @@ class HomePage extends StatelessWidget {
                         ),
                       );
                     }
-                    return; // PENTING: return agar dialog tidak tertutup
+                    return;
                   }
                   
-                  // Jika tidak duplikat, simpan event
+                  // Note: addEvent needs to be updated to accept new fields
                   await provider.addEvent(
                     name: nameController.text,
                     description: descriptionController.text,
                     date: dateController.text,
+                    location: locationController.text,
+                    quota: int.parse(quotaController.text),
+                    createdBy: authProvider.currentUser?.id ?? '',
+                    status: 'published',
                   );
                   
-                  // TUTUP DIALOG - INI YANG PALING PENTING!
                   if (dialogContext.mounted) {
                     Navigator.pop(dialogContext);
                   }
                   
-                  // Tampilkan notifikasi berhasil SETELAH dialog tertutup
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -191,7 +389,6 @@ class HomePage extends StatelessWidget {
                   }
                   
                 } catch (e) {
-                  // Jika ada error, tampilkan error tapi JANGAN TUTUP DIALOG
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

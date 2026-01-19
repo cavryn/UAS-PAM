@@ -13,20 +13,28 @@ class FirestoreDatasource {
   }
 
   Future<void> addEvent({
-    required String name,
-    required String description,
-    required String date,
-  }) async {
-    final event = EventModel(
-      id: '',
-      name: name,
-      description: description,
-      date: date,
-    );
+  required String name,
+  required String description,
+  required String date,
+  required String location,      // TAMBAH
+  required int quota,             // TAMBAH
+  required String createdBy,      // TAMBAH
+  required String status,         // TAMBAH
+}) async {
+  final event = EventModel(
+    id: '',
+    name: name,
+    description: description,
+    date: date,
+    location: location,
+    quota: quota,
+    createdBy: createdBy,
+    status: status,
+    createdAt: DateTime.now(),
+  );
 
-    await _firestore.collection('events').add(event.toFirestore());
-  }
-
+  await _firestore.collection('events').add(event.toFirestore());
+}
   Future<bool> checkDuplicateEvent({
     required String name,
     required String date,
